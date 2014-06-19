@@ -18,7 +18,7 @@ function cyclicStringify(jsonObject) {
 	// thus breaking the vicious circle
 	var alreadyVisited = [];
     var serializedData = JSON.stringify(jsonObject, function(key, value) {
-        if (typeof value == "object") {
+        if (value != null && typeof value == "object") {
             if (alreadyVisited.indexOf(value.name) >= 0) {
                 // do something other that putting the reference, like 
                 // putting some name that you can use to build the 
@@ -41,11 +41,11 @@ function recreateNode(obj, nodeArr) {
 	nodeArr.push(newNode);
 	if (obj.hasOwnProperty("next")) {
 		// if points to another node	
-		if (typeof obj.next == "object") {
+		if (obj.next != null && typeof obj.next == "object") {
 			// and that another node is an actual node and not named reference		
 			// create the new node and attach to this node
 			newNode.next = recreateNode(obj.next, nodeArr);	
-		} else if (obj.next.indexOf("@") == 0) {
+		} else if (obj.next != null && obj.next.indexOf("@") == 0) {
 			// else if its a named reference using a @
 			// get the name
 			var nodeName = obj.next.substr(1, obj.next.length);
@@ -74,21 +74,46 @@ function recreate(jsonString) {
 	return nodeArray;
 }
 
-function runDemo() {
+// driver IIFE
+(function runDemo() {
+	// TEST CASE #1
 	//create some nodes
 	var n1 = new Node("A", 1);
 	var n2 = new Node("B", 2);
 	var n3 = new Node("C", 3);
 	var n4 = new Node("D", 4);
+
 	// set up some cyclic references
 	n1.next = n2;
 	n2.next = n3;
 	n3.next = n4;
 	n4.next = n1;
+
 	// serialize
 	var sData = cyclicStringify(n1);
 	// recreate 
 	var rData = recreate(sData);
 	// show the resultant nodes in an array
 	console.log(rData);
-}
+	
+	// TEST CASE #2
+	//create some nodes
+	var n1 = new Node("A", 1);
+	var n2 = new Node("B", 2);
+	var n3 = new Node("C", 3);
+	var n4 = new Node("D", 4);
+
+	// set up some cyclic references
+	n1.next = n2;
+	n2.next = n3;
+	n3.next = n4;
+	n4.next = null;
+
+	// serialize
+	var sData = cyclicStringify(n1);
+	// recreate 
+	var rData = recreate(sData);
+	// show the resultant nodes in an array
+	console.log(rData);
+	
+} ());
